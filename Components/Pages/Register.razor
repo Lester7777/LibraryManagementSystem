@@ -1,0 +1,90 @@
+@page "/register"
+@using System.ComponentModel.DataAnnotations
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+    <MudPaper Elevation="4" Class="pa-8">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-8">Create Account</MudText>
+        <EditForm Model="@_model" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudTextField Label="First Name" @bind-Value="_model.FirstName" For="@(() => _model.FirstName)" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField Label="Last Name" @bind-Value="_model.LastName" For="@(() => _model.LastName)" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Label="Email" @bind-Value="_model.Email" For="@(() => _model.Email)" Required="true" InputType="InputType.Email" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Label="Phone Number" @bind-Value="_model.Phone" For="@(() => _model.Phone)" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Label="Password" @bind-Value="_model.Password" For="@(() => _model.Password)" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Label="Confirm Password" @bind-Value="_model.ConfirmPassword" For="@(() => _model.ConfirmPassword)" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" Class="d-flex justify-center">
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" Class="mt-4">Register</MudButton>
+                </MudItem>
+                <MudItem xs="12" Class="d-flex justify-center">
+                    <MudLink href="/login">Already have an account? Login</MudLink>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private RegisterModel _model = new();
+
+    private async Task HandleRegister()
+    {
+        if (_model.Password != _model.ConfirmPassword)
+        {
+            Snackbar.Add("Passwords do not match", Severity.Error);
+            return;
+        }
+
+        var result = await AuthService.RegisterAsync(_model.FirstName, _model.LastName, _model.Email, _model.Password, _model.Phone);
+        if (result != null)
+        {
+            Snackbar.Add("Registration successful!", Severity.Success);
+            NavigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            Snackbar.Add("Email already in use", Severity.Error);
+        }
+    }
+
+    public class RegisterModel
+    {
+        [Required]
+        [StringLength(50)]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(50)]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Phone]
+        public string? Phone { get; set; }
+
+        [Required]
+        [MinLength(6)]
+        public string Password { get; set; } = string.Empty;
+
+        [Required]
+        [Compare(nameof(Password))]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

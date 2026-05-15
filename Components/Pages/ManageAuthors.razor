@@ -1,0 +1,175 @@
+@page "/admin/authors"
+@using LibraryManagement.Features.Data
+@using LibraryManagement.Features.Data.Models
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+@inject CurrentUserService CurrentUserService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <MudText Typo="Typo.h3" Class="mb-4">Manage Authors</MudText>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4" OnClick="OpenAddAuthorDialog" StartIcon="@Icons.Material.Filled.Add">
+        Add New Author
+    </MudButton>
+
+    @if (_authors == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_authors.Any())
+    {
+        <MudAlert Severity="Severity.Info">No authors in the library yet.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="_authors" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Biography</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Biography">@context.Biography</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditAuthorDialog(context))">Edit</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAuthor(context.Id))" Class="ml-2">Delete</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+<MudDialog @bind-IsOpen="_addAuthorDialogOpen">
+    <DialogContent>
+        <MudText Typo="Typo.h5">Add New Author</MudText>
+        <EditForm Model="_newAuthor" OnValidSubmit="AddAuthor">
+            <DataAnnotationsValidator />
+            <MudGrid Class="mt-4">
+                <MudItem xs="12">
+                    <MudTextField Label="Name" @bind-Value="_newAuthor.Name" For="@(() => _newAuthor.Name)" Required="true" Variant="Variant.Outlined" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Label="Biography" @bind-Value="_newAuthor.Biography" Variant="Variant.Outlined" FullWidth="true" Multiline="true" Rows="3" />
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAddAuthorDialog">Cancel</MudButton>
+        <MudButton OnClick="AddAuthor" Color="Color.Primary">Add Author</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsOpen="_editAuthorDialogOpen">
+    <DialogContent>
+        <MudText Typo="Typo.h5">Edit Author</MudText>
+        @if (_editingAuthor != null)
+        {
+            <EditForm Model="_editingAuthor" OnValidSubmit="SaveEditedAuthor">
+                <DataAnnotationsValidator />
+                <MudGrid Class="mt-4">
+                    <MudItem xs="12">
+                        <MudTextField Label="Name" @bind-Value="_editingAuthor.Name" For="@(() => _editingAuthor.Name)" Required="true" Variant="Variant.Outlined" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField Label="Biography" @bind-Value="_editingAuthor.Biography" Variant="Variant.Outlined" FullWidth="true" Multiline="true" Rows="3" />
+                    </MudItem>
+                </MudGrid>
+            </EditForm>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseEditAuthorDialog">Cancel</MudButton>
+        <MudButton OnClick="SaveEditedAuthor" Color="Color.Primary">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<Author>? _authors;
+    private Author _newAuthor = new();
+    private Author? _editingAuthor;
+    private bool _addAuthorDialogOpen;
+    private bool _editAuthorDialogOpen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn || !CurrentUserService.IsAdmin)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        await LoadAuthors();
+    }
+
+    private async Task LoadAuthors()
+    {
+        _authors = await Db.Authors.ToListAsync();
+    }
+
+    private void OpenAddAuthorDialog()
+    {
+        _newAuthor = new Author();
+        _addAuthorDialogOpen = true;
+    }
+
+    private void CloseAddAuthorDialog()
+    {
+        _addAuthorDialogOpen = false;
+    }
+
+    private async Task AddAuthor()
+    {
+        Db.Authors.Add(_newAuthor);
+        await Db.SaveChangesAsync();
+        await LoadAuthors();
+        _addAuthorDialogOpen = false;
+        Snackbar.Add("Author added successfully!", Severity.Success);
+    }
+
+    private void OpenEditAuthorDialog(Author author)
+    {
+        _editingAuthor = new Author
+        {
+            Id = author.Id,
+            Name = author.Name,
+            Biography = author.Biography
+        };
+        _editAuthorDialogOpen = true;
+    }
+
+    private void CloseEditAuthorDialog()
+    {
+        _editAuthorDialogOpen = false;
+    }
+
+    private async Task SaveEditedAuthor()
+    {
+        if (_editingAuthor == null) return;
+
+        var authorToUpdate = await Db.Authors.FindAsync(_editingAuthor.Id);
+        if (authorToUpdate == null) return;
+
+        authorToUpdate.Name = _editingAuthor.Name;
+        authorToUpdate.Biography = _editingAuthor.Biography;
+
+        await Db.SaveChangesAsync();
+        await LoadAuthors();
+        _editAuthorDialogOpen = false;
+        Snackbar.Add("Author updated successfully!", Severity.Success);
+    }
+
+    private async Task DeleteAuthor(int authorId)
+    {
+        var author = await Db.Authors.FindAsync(authorId);
+        if (author == null) return;
+
+        Db.Authors.Remove(author);
+        await Db.SaveChangesAsync();
+        await LoadAuthors();
+        Snackbar.Add("Author deleted successfully!", Severity.Success);
+    }
+}

@@ -1,0 +1,145 @@
+@page "/dashboard"
+@using Microsoft.AspNetCore.Components.Authorization
+@using LibraryManagement.Features.Data
+@using LibraryManagement.Features.Data.Models
+@using Microsoft.EntityFrameworkCore
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject AppDbContext Db
+@inject CurrentUserService CurrentUserService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <AuthorizeView>
+        <Authorized>
+            <MudText Typo="Typo.h3" Class="mb-4">Welcome to Your Dashboard, @context.User.Identity?.Name!</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="4" Class="pa-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Active Loans</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.h4" Color="Color.Primary">@_activeLoans?.Count ?? 0</MudText>
+                            <MudText Typo="Typo.body2">@((_activeLoans?.Count ?? 0) == 0 ? "You have no active book loans." : "")</MudText>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" href="/books">Browse Books</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="4" Class="pa-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Overdue Books</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.h4" Color="Color.Error">@_overdueLoans?.Count ?? 0</MudText>
+                            <MudText Typo="Typo.body2">@((_overdueLoans?.Count ?? 0) == 0 ? "Good job! No overdue books." : "")</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudCard Elevation="4" Class="pa-4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Member Info</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1"><b>Email:</b> @context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</MudText>
+                            <MudText Typo="Typo.body1"><b>Full Name:</b> @context.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value @context.User.FindFirst(System.Security.Claims.ClaimTypes.Surname)?.Value</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+
+            @if (_activeLoans != null && _activeLoans.Any())
+            {
+                <MudText Typo="Typo.h5" Class="mt-8 mb-4">Your Active Loans</MudText>
+                <MudGrid>
+                    @foreach (var loan in _activeLoans)
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudCard Elevation="4" Class="pa-4 h-100">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">@loan.Book.Title</MudText>
+                                        <MudText Typo="Typo.body2">by @loan.Book.Author.Name</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body2">Loan Date: @loan.LoanDate.ToLocalTime().ToShortDateString()</MudText>
+                                    <MudText Typo="Typo.body2">Due Date: @loan.DueDate.ToLocalTime().ToShortDateString()</MudText>
+                                    @if (loan.DueDate < DateTime.UtcNow)
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Error">Overdue!</MudText>
+                                    }
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ReturnBook(loan.Id))">Return Book</MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <MudText Typo="Typo.h5">Redirecting to login...</MudText>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudContainer>
+
+@code {
+    private List<Loan>? _activeLoans;
+    private List<Loan>? _overdueLoans;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (!authState.User.Identity?.IsAuthenticated ?? true)
+        {
+            await Task.Delay(100);
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        await LoadLoans();
+    }
+
+    private async Task LoadLoans()
+    {
+        var memberId = CurrentUserService.Id;
+        if (!memberId.HasValue)
+            return;
+
+        var loans = await Db.Loans
+            .Include(l => l.Book)
+                .ThenInclude(b => b.Author)
+            .Where(l => l.MemberId == memberId.Value && !l.ReturnDate.HasValue)
+            .ToListAsync();
+
+        _activeLoans = loans;
+        _overdueLoans = loans.Where(l => l.DueDate < DateTime.UtcNow).ToList();
+    }
+
+    private async Task ReturnBook(int loanId)
+    {
+        var loan = await Db.Loans
+            .Include(l => l.Book)
+            .FirstOrDefaultAsync(l => l.Id == loanId);
+
+        if (loan == null)
+            return;
+
+        loan.ReturnDate = DateTime.UtcNow;
+        loan.Book.AvailableCopies++;
+        await Db.SaveChangesAsync();
+
+        await LoadLoans();
+    }
+}

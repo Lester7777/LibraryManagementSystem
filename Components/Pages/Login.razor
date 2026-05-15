@@ -1,0 +1,46 @@
+@page "/login"
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+    <MudPaper Elevation="4" Class="pa-8">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-8">Login</MudText>
+        @if (NavigationManager.Uri.Contains("error=invalid_credentials"))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">Invalid email or password</MudAlert>
+        }
+        <form action="/api/auth/login" method="post">
+            <AntiforgeryToken />
+            <input type="hidden" name="Email" value="@_model.Email" />
+            <input type="hidden" name="Password" value="@_model.Password" />
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudTextField Label="Email" @bind-Value="_model.Email" For="@(() => _model.Email)" Required="true" InputType="InputType.Email" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField Label="Password" @bind-Value="_model.Password" For="@(() => _model.Password)" InputType="InputType.Password" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" Class="d-flex justify-center">
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true" Class="mt-4">Login</MudButton>
+                </MudItem>
+                <MudItem xs="12" Class="d-flex justify-center">
+                    <MudLink href="/register">Don't have an account? Register</MudLink>
+                </MudItem>
+            </MudGrid>
+        </form>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private LoginModel _model = new();
+
+    public class LoginModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
+    }
+}

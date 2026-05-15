@@ -1,0 +1,45 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject HttpClient HttpClient
+@inject CurrentUserService CurrentUserService
+
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+
+    <AuthorizeView>
+        <Authorized>
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.caption" Class="px-4 py-2">@context.User.Identity?.Name</MudText>
+            <MudNavLink Href="/dashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+            <MudNavLink Href="/books" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LibraryBooks">Browse Books</MudNavLink>
+            
+            @if (CurrentUserService.IsAdmin)
+            {
+                <MudDivider Class="my-2" />
+                <MudText Typo="Typo.caption" Class="px-4 py-2">Admin</MudText>
+                <MudNavLink Href="/admin/books" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Book">Manage Books</MudNavLink>
+                <MudNavLink Href="/admin/authors" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Manage Authors</MudNavLink>
+            }
+            
+            <form action="/api/auth/logout" method="post">
+                <AntiforgeryToken />
+                <MudButton ButtonType="ButtonType.Submit" 
+                           Variant="Variant.Text" 
+                           StartIcon="@Icons.Material.Filled.Logout" 
+                           FullWidth="true" 
+                           Style="justify-content: flex-start; text-transform: none; padding-left: 16px;">
+                    Logout
+                </MudButton>
+            </form>
+        </Authorized>
+        <NotAuthorized>
+            <MudDivider Class="my-2" />
+            <MudNavLink Href="/login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>
+            <MudNavLink Href="/register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AppRegistration">Register</MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudNavMenu>
+
+@code {
+}

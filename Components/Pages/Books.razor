@@ -1,0 +1,93 @@
+@page "/books"
+@using LibraryManagement.Features.Data
+@using LibraryManagement.Features.Data.Models
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+@inject CurrentUserService CurrentUserService
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <MudText Typo="Typo.h3" Class="mb-4">Browse Books</MudText>
+
+    @if (_books == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_books.Any())
+    {
+        <MudAlert Severity="Severity.Info">No books available in the library yet.</MudAlert>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var book in _books)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="4" Class="pa-4 h-100">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@book.Title</MudText>
+                                <MudText Typo="Typo.body2">by @book.Author.Name</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body2">Genre: @(book.Genre ?? "Unknown")</MudText>
+                            <MudText Typo="Typo.body2">Available: @book.AvailableCopies / @book.TotalCopies</MudText>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(book.AvailableCopies <= 0)" OnClick="@(() => BorrowBook(book.Id))">
+                                @(book.AvailableCopies > 0 ? "Borrow" : "Out of Stock")
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<Book>? _books;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        await LoadBooks();
+    }
+
+    private async Task LoadBooks()
+    {
+        _books = await Db.Books
+            .Include(b => b.Author)
+            .ToListAsync();
+    }
+
+    private async Task BorrowBook(int bookId)
+    {
+        var book = _books.FirstOrDefault(b => b.Id == bookId);
+        if (book == null || book.AvailableCopies <= 0)
+            return;
+
+        var memberId = CurrentUserService.Id;
+        if (!memberId.HasValue)
+            return;
+
+        var loan = new Loan
+        {
+            BookId = bookId,
+            MemberId = memberId.Value,
+            DueDate = DateTime.UtcNow.AddDays(14)
+        };
+
+        Db.Loans.Add(loan);
+        book.AvailableCopies--;
+        await Db.SaveChangesAsync();
+        
+        await LoadBooks();
+    }
+}

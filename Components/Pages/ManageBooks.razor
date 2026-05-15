@@ -1,0 +1,224 @@
+@page "/admin/books"
+@using LibraryManagement.Features.Data
+@using LibraryManagement.Features.Data.Models
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+@inject CurrentUserService CurrentUserService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <MudText Typo="Typo.h3" Class="mb-4">Manage Books</MudText>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mb-4" OnClick="OpenAddBookDialog" StartIcon="@Icons.Material.Filled.Add">
+        Add New Book
+    </MudButton>
+
+    @if (_books == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_books.Any())
+    {
+        <MudAlert Severity="Severity.Info">No books in the library yet.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="_books" Hover="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Title</MudTh>
+                <MudTh>Author</MudTh>
+                <MudTh>Genre</MudTh>
+                <MudTh>Total Copies</MudTh>
+                <MudTh>Available Copies</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Title">@context.Title</MudTd>
+                <MudTd DataLabel="Author">@context.Author.Name</MudTd>
+                <MudTd DataLabel="Genre">@context.Genre</MudTd>
+                <MudTd DataLabel="Total Copies">@context.TotalCopies</MudTd>
+                <MudTd DataLabel="Available Copies">@context.AvailableCopies</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditBookDialog(context))">Edit</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteBook(context.Id))" Class="ml-2">Delete</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+<MudDialog @bind-IsOpen="_addBookDialogOpen">
+    <DialogContent>
+        <MudText Typo="Typo.h5">Add New Book</MudText>
+        <EditForm Model="_newBook" OnValidSubmit="AddBook">
+            <DataAnnotationsValidator />
+            <MudGrid Class="mt-4">
+                <MudItem xs="12">
+                    <MudTextField Label="Title" @bind-Value="_newBook.Title" For="@(() => _newBook.Title)" Required="true" Variant="Variant.Outlined" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int" Label="Author" @bind-Value="_newBook.AuthorId" For="@(() => _newBook.AuthorId)" Required="true" Variant="Variant.Outlined" FullWidth="true">
+                        @if (_authors != null)
+                        {
+                            @foreach (var author in _authors)
+                            {
+                                <MudSelectItem T="int" Value="@author.Id">@author.Name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField Label="Genre" @bind-Value="_newBook.Genre" Variant="Variant.Outlined" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField Label="Total Copies" @bind-Value="_newBook.TotalCopies" Min="1" Required="true" Variant="Variant.Outlined" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField Label="Available Copies" @bind-Value="_newBook.AvailableCopies" Min="0" Required="true" Variant="Variant.Outlined" FullWidth="true" />
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseAddBookDialog">Cancel</MudButton>
+        <MudButton OnClick="AddBook" Color="Color.Primary">Add Book</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsOpen="_editBookDialogOpen">
+    <DialogContent>
+        <MudText Typo="Typo.h5">Edit Book</MudText>
+        @if (_editingBook != null)
+        {
+            <EditForm Model="_editingBook" OnValidSubmit="SaveEditedBook">
+                <DataAnnotationsValidator />
+                <MudGrid Class="mt-4">
+                    <MudItem xs="12">
+                        <MudTextField Label="Title" @bind-Value="_editingBook.Title" For="@(() => _editingBook.Title)" Required="true" Variant="Variant.Outlined" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int" Label="Author" @bind-Value="_editingBook.AuthorId" For="@(() => _editingBook.AuthorId)" Required="true" Variant="Variant.Outlined" FullWidth="true">
+                            @if (_authors != null)
+                            {
+                                @foreach (var author in _authors)
+                                {
+                                    <MudSelectItem T="int" Value="@author.Id">@author.Name</MudSelectItem>
+                                }
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField Label="Genre" @bind-Value="_editingBook.Genre" Variant="Variant.Outlined" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudNumericField Label="Total Copies" @bind-Value="_editingBook.TotalCopies" Min="1" Required="true" Variant="Variant.Outlined" FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudNumericField Label="Available Copies" @bind-Value="_editingBook.AvailableCopies" Min="0" Required="true" Variant="Variant.Outlined" FullWidth="true" />
+                    </MudItem>
+                </MudGrid>
+            </EditForm>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseEditBookDialog">Cancel</MudButton>
+        <MudButton OnClick="SaveEditedBook" Color="Color.Primary">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<Book>? _books;
+    private List<Author>? _authors;
+    private Book _newBook = new();
+    private Book? _editingBook;
+    private bool _addBookDialogOpen;
+    private bool _editBookDialogOpen;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn || !CurrentUserService.IsAdmin)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _books = await Db.Books.Include(b => b.Author).ToListAsync();
+        _authors = await Db.Authors.ToListAsync();
+    }
+
+    private void OpenAddBookDialog()
+    {
+        _newBook = new Book();
+        _addBookDialogOpen = true;
+    }
+
+    private void CloseAddBookDialog()
+    {
+        _addBookDialogOpen = false;
+    }
+
+    private async Task AddBook()
+    {
+        Db.Books.Add(_newBook);
+        await Db.SaveChangesAsync();
+        await LoadData();
+        _addBookDialogOpen = false;
+        Snackbar.Add("Book added successfully!", Severity.Success);
+    }
+
+    private void OpenEditBookDialog(Book book)
+    {
+        _editingBook = new Book
+        {
+            Id = book.Id,
+            Title = book.Title,
+            AuthorId = book.AuthorId,
+            Genre = book.Genre,
+            TotalCopies = book.TotalCopies,
+            AvailableCopies = book.AvailableCopies,
+            ISBN = book.ISBN
+        };
+        _editBookDialogOpen = true;
+    }
+
+    private void CloseEditBookDialog()
+    {
+        _editBookDialogOpen = false;
+    }
+
+    private async Task SaveEditedBook()
+    {
+        if (_editingBook == null) return;
+
+        var bookToUpdate = await Db.Books.FindAsync(_editingBook.Id);
+        if (bookToUpdate == null) return;
+
+        bookToUpdate.Title = _editingBook.Title;
+        bookToUpdate.AuthorId = _editingBook.AuthorId;
+        bookToUpdate.Genre = _editingBook.Genre;
+        bookToUpdate.TotalCopies = _editingBook.TotalCopies;
+        bookToUpdate.AvailableCopies = _editingBook.AvailableCopies;
+
+        await Db.SaveChangesAsync();
+        await LoadData();
+        _editBookDialogOpen = false;
+        Snackbar.Add("Book updated successfully!", Severity.Success);
+    }
+
+    private async Task DeleteBook(int bookId)
+    {
+        var book = await Db.Books.FindAsync(bookId);
+        if (book == null) return;
+
+        Db.Books.Remove(book);
+        await Db.SaveChangesAsync();
+        await LoadData();
+        Snackbar.Add("Book deleted successfully!", Severity.Success);
+    }
+}
