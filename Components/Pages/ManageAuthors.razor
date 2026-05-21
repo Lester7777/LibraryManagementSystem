@@ -52,7 +52,7 @@
                     <MudTextField Label="Name" @bind-Value="_newAuthor.Name" For="@(() => _newAuthor.Name)" Required="true" Variant="Variant.Outlined" FullWidth="true" />
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField Label="Biography" @bind-Value="_newAuthor.Biography" Variant="Variant.Outlined" FullWidth="true" Multiline="true" Rows="3" />
+                    <MudTextField Label="Biography" @bind-Value="_newAuthor.Biography" Variant="Variant.Outlined" FullWidth="true" Lines="3" />
                 </MudItem>
             </MudGrid>
         </EditForm>
@@ -75,7 +75,7 @@
                         <MudTextField Label="Name" @bind-Value="_editingAuthor.Name" For="@(() => _editingAuthor.Name)" Required="true" Variant="Variant.Outlined" FullWidth="true" />
                     </MudItem>
                     <MudItem xs="12">
-                        <MudTextField Label="Biography" @bind-Value="_editingAuthor.Biography" Variant="Variant.Outlined" FullWidth="true" Multiline="true" Rows="3" />
+                        <MudTextField Label="Biography" @bind-Value="_editingAuthor.Biography" Variant="Variant.Outlined" FullWidth="true" Lines="3" />
                     </MudItem>
                 </MudGrid>
             </EditForm>
