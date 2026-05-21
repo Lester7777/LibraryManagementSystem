@@ -43,9 +43,9 @@
 </MudContainer>
 
 <MudDialog @bind-IsOpen="_addAuthorDialogOpen">
-    <EditForm Model="_newAuthor" OnValidSubmit="AddAuthor">
-        <DialogContent>
-            <MudText Typo="Typo.h5">Add New Author</MudText>
+    <DialogContent>
+        <MudText Typo="Typo.h5">Add New Author</MudText>
+        <EditForm Model="_newAuthor" OnValidSubmit="AddAuthor">
             <DataAnnotationsValidator />
             <MudGrid Class="mt-4">
                 <MudItem xs="12">
@@ -55,20 +55,20 @@
                     <MudTextField Label="Biography" @bind-Value="_newAuthor.Biography" Variant="Variant.Outlined" FullWidth="true" Lines="3" />
                 </MudItem>
             </MudGrid>
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick="CloseAddAuthorDialog">Cancel</MudButton>
-            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Add Author</MudButton>
-        </DialogActions>
-    </EditForm>
+            <DialogActions Class="mt-4">
+                <MudButton OnClick="CloseAddAuthorDialog">Cancel</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Add Author</MudButton>
+            </DialogActions>
+        </EditForm>
+    </DialogContent>
 </MudDialog>
 
 <MudDialog @bind-IsOpen="_editAuthorDialogOpen">
-    @if (_editingAuthor != null)
-    {
-        <EditForm Model="_editingAuthor" OnValidSubmit="SaveEditedAuthor">
-            <DialogContent>
-                <MudText Typo="Typo.h5">Edit Author</MudText>
+    <DialogContent>
+        <MudText Typo="Typo.h5">Edit Author</MudText>
+        @if (_editingAuthor != null)
+        {
+            <EditForm Model="_editingAuthor" OnValidSubmit="SaveEditedAuthor">
                 <DataAnnotationsValidator />
                 <MudGrid Class="mt-4">
                     <MudItem xs="12">
@@ -78,13 +78,13 @@
                         <MudTextField Label="Biography" @bind-Value="_editingAuthor.Biography" Variant="Variant.Outlined" FullWidth="true" Lines="3" />
                     </MudItem>
                 </MudGrid>
-            </DialogContent>
-            <DialogActions>
-                <MudButton OnClick="CloseEditAuthorDialog">Cancel</MudButton>
-                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Save</MudButton>
-            </DialogActions>
-        </EditForm>
-    }
+                <DialogActions Class="mt-4">
+                    <MudButton OnClick="CloseEditAuthorDialog">Cancel</MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary">Save</MudButton>
+                </DialogActions>
+            </EditForm>
+        }
+    </DialogContent>
 </MudDialog>
 
 @code {
