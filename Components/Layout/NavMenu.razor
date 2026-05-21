@@ -5,14 +5,14 @@
 @inject CurrentUserService CurrentUserService
 
 <MudNavMenu>
-    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-
     <AuthorizeView>
         <Authorized>
             <MudDivider Class="my-2" />
             <MudText Typo="Typo.caption" Class="px-4 py-2">@context.User.Identity?.Name</MudText>
             <MudNavLink Href="/dashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
             <MudNavLink Href="/books" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LibraryBooks">Browse Books</MudNavLink>
+            <MudNavLink Href="/authors" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Authors</MudNavLink>
+            <MudNavLink Href="/my-loans" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LibraryAdd">My Loans</MudNavLink>
             
             @if (CurrentUserService.IsAdmin)
             {

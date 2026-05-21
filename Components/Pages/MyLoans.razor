@@ -1,4 +1,4 @@
-@page "/dashboard"
+@page "/my-loans"
 @using LibraryManagement.Features.Data
 @using LibraryManagement.Features.Data.Models
 @using Microsoft.EntityFrameworkCore
@@ -7,57 +7,14 @@
 @inject CurrentUserService CurrentUserService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ISnackbar Snackbar
-@inject NavigationManager NavigationManager
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>My Loans</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8 mb-8">
-    <MudPaper Class="pa-8 mb-8" Elevation="3">
-        <MudGrid>
-            <MudItem xs="12" md="8">
-                <MudText Typo="Typo.h3" Color="Color.Primary" Class="mb-2">
-                    Welcome back, @CurrentUserService.FullName!
-                </MudText>
-                <MudText Typo="Typo.body1" Color="Color.Inherit">
-                    Here's what's happening with your library account today.
-                </MudText>
-            </MudItem>
-            <MudItem xs="12" md="4" Class="d-flex align-end justify-end">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" StartIcon="@Icons.Material.Filled.Book" Href="/books">
-                    Browse Books
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudPaper>
-
+    <MudText Typo="Typo.h3" Class="mb-8">My Loans</MudText>
+    
     <MudGrid Class="mb-8">
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Class="pa-6" Elevation="3">
-                <MudGrid>
-                    <MudItem xs="4">
-                        <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Large" Color="Color.Primary" />
-                    </MudItem>
-                    <MudItem xs="8" Class="text-end">
-                        <MudText Typo="Typo.caption" Color="Color.Inherit">Total Books</MudText>
-                        <MudText Typo="Typo.h3" Color="Color.Primary">@totalBooks</MudText>
-                    </MudItem>
-                </MudGrid>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Class="pa-6" Elevation="3">
-                <MudGrid>
-                    <MudItem xs="4">
-                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Secondary" />
-                    </MudItem>
-                    <MudItem xs="8" Class="text-end">
-                        <MudText Typo="Typo.caption" Color="Color.Inherit">Total Authors</MudText>
-                        <MudText Typo="Typo.h3" Color="Color.Secondary">@totalAuthors</MudText>
-                    </MudItem>
-                </MudGrid>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
+        <MudItem xs="12" sm="6" md="4">
             <MudPaper Class="pa-6" Elevation="3">
                 <MudGrid>
                     <MudItem xs="4">
@@ -70,7 +27,7 @@
                 </MudGrid>
             </MudPaper>
         </MudItem>
-        <MudItem xs="12" sm="6" md="3">
+        <MudItem xs="12" sm="6" md="4">
             <MudPaper Class="pa-6" Elevation="3">
                 <MudGrid>
                     <MudItem xs="4">
@@ -83,60 +40,25 @@
                 </MudGrid>
             </MudPaper>
         </MudItem>
-    </MudGrid>
-
-    <MudGrid Class="mb-8">
         <MudItem xs="12" sm="6" md="4">
-            <MudPaper Class="pa-6" Elevation="3" Style="cursor: pointer" @onclick="NavigateToBooks">
+            <MudPaper Class="pa-6" Elevation="3">
                 <MudGrid>
                     <MudItem xs="4">
-                        <MudIcon Icon="@Icons.Material.Filled.BookOnline" Size="Size.Large" Color="Color.Primary" />
+                        <MudIcon Icon="@Icons.Material.Filled.LibraryAddCheck" Size="Size.Large" Color="Color.Secondary" />
                     </MudItem>
-                    <MudItem xs="8">
-                        <MudText Typo="Typo.h6">Browse & Borrow</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Inherit">Find and borrow books you want to read</MudText>
+                    <MudItem xs="8" Class="text-end">
+                        <MudText Typo="Typo.caption" Color="Color.Inherit">Returned Books</MudText>
+                        <MudText Typo="Typo.h3" Color="Color.Secondary">@returnedBooks</MudText>
                     </MudItem>
                 </MudGrid>
             </MudPaper>
         </MudItem>
-        @if (myLoans.Any())
-        {
-            <MudItem xs="12" sm="6" md="4">
-                <MudPaper Class="pa-6" Elevation="3">
-                    <MudGrid>
-                        <MudItem xs="4">
-                            <MudIcon Icon="@Icons.Material.Filled.LibraryAddCheck" Size="Size.Large" Color="Color.Secondary" />
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudText Typo="Typo.h6">Return Books</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Inherit">You have @activeLoans books to return</MudText>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            </MudItem>
-        }
-        @if (CurrentUserService.IsAdmin)
-        {
-            <MudItem xs="12" sm="6" md="4">
-                <MudPaper Class="pa-6" Elevation="3" Style="cursor: pointer" @onclick="NavigateToAdminBooks">
-                    <MudGrid>
-                        <MudItem xs="4">
-                            <MudIcon Icon="@Icons.Material.Filled.ManageAccounts" Size="Size.Large" Color="Color.Warning" />
-                        </MudItem>
-                        <MudItem xs="8">
-                            <MudText Typo="Typo.h6">Manage Library</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Inherit">Admin: Manage books and authors</MudText>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            </MudItem>
-        }
     </MudGrid>
 
     @if (myLoans.Any())
     {
         <MudPaper Class="pa-8" Elevation="3">
-            <MudText Typo="Typo.h5" Class="mb-6">My Active Loans</MudText>
+            <MudText Typo="Typo.h5" Class="mb-6">Active Loans</MudText>
             <MudTable Items="myLoans" Hover="true" Bordered="true" Striped="true">
                 <HeaderContent>
                     <MudTh>Book Title</MudTh>
@@ -183,10 +105,9 @@
 </MudContainer>
 
 @code {
-    private int totalBooks = 0;
-    private int totalAuthors = 0;
     private int activeLoans = 0;
     private int overdueLoans = 0;
+    private int returnedBooks = 0;
     private List<Loan> myLoans = new();
 
     protected override async Task OnInitializedAsync()
@@ -196,9 +117,6 @@
 
     private async Task LoadData()
     {
-        totalBooks = await Db.Books.CountAsync();
-        totalAuthors = await Db.Authors.CountAsync();
-        
         if (CurrentUserService.Id.HasValue)
         {
             myLoans = await Db.Loans
@@ -209,17 +127,9 @@
 
             activeLoans = myLoans.Count;
             overdueLoans = myLoans.Count(l => l.DueDate < DateTime.UtcNow);
+            returnedBooks = await Db.Loans
+                .CountAsync(l => l.MemberId == CurrentUserService.Id && l.ReturnDate.HasValue);
         }
-    }
-
-    private void NavigateToBooks()
-    {
-        NavigationManager.NavigateTo("/books");
-    }
-
-    private void NavigateToAdminBooks()
-    {
-        NavigationManager.NavigateTo("/admin/books");
     }
 
     private async Task ReturnBook(int loanId)

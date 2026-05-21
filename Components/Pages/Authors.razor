@@ -1,0 +1,57 @@
+@page "/authors"
+@using LibraryManagement.Features.Data
+@using LibraryManagement.Features.Data.Models
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Db
+@inject ISnackbar Snackbar
+
+<PageTitle>Authors</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-8 mb-8">
+    <MudText Typo="Typo.h3" Class="mb-8">Authors</MudText>
+    
+    <MudGrid>
+        @foreach (var author in authors)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Class="pa-6" Elevation="3">
+                    <MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-2">@author.Name</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Inherit">
+                        @if (!string.IsNullOrEmpty(author.Biography))
+                        {
+                            @author.Biography
+                        }
+                        else
+                        {
+                            @("No biography available")
+                        }
+                    </MudText>
+                    @if (author.Books != null && author.Books.Any())
+                    {
+                        <MudDivider Class="my-4" />
+                        <MudText Typo="Typo.caption" Color="Color.Inherit">Books by this author:</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            @string.Join(", ", author.Books.Select(b => b.Title))
+                        </MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<Author> authors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAuthors();
+    }
+
+    private async Task LoadAuthors()
+    {
+        authors = await Db.Authors
+            .Include(a => a.Books)
+            .ToListAsync();
+    }
+}

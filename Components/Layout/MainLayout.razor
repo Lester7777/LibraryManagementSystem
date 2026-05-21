@@ -1,16 +1,17 @@
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_customTheme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudLayout>
     @if (!IsAuthPage)
     {
-        <MudAppBar Elevation="1">
+        <MudAppBar Elevation="2">
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
                            OnClick="@((e) => DrawerToggle())" />
+            <MudText Typo="Typo.h6" Class="ml-3">Library Management</MudText>
             <MudSpacer />
             <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit"
                            Edge="Edge.End" />
@@ -30,6 +31,54 @@
 @code {
     bool _drawerOpen = true;
     private bool IsAuthPage => NavigationManager.Uri.Contains("/login") || NavigationManager.Uri.Contains("/register");
+    
+    private readonly MudTheme _customTheme = new()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#2E7D32",
+            PrimaryLighten = "#4CAF50",
+            PrimaryDarken = "#1B5E20",
+            Secondary = "#0288D1",
+            SecondaryLighten = "#03A9F4",
+            SecondaryDarken = "#01579B",
+            Tertiary = "#FF8F00",
+            AppbarBackground = "#2E7D32",
+            AppbarText = "#FFFFFF",
+            DrawerBackground = "#F5F5F5",
+            DrawerText = "#333333",
+            Background = "#FAFAFA",
+            Surface = "#FFFFFF",
+            TextPrimary = "#212121",
+            TextSecondary = "#757575",
+            Success = "#2E7D32",
+            Warning = "#FF8F00",
+            Error = "#D32F2F",
+            Info = "#0288D1"
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#4CAF50",
+            PrimaryLighten = "#81C784",
+            PrimaryDarken = "#2E7D32",
+            Secondary = "#03A9F4",
+            SecondaryLighten = "#4FC3F7",
+            SecondaryDarken = "#0288D1",
+            Tertiary = "#FFA726",
+            AppbarBackground = "#1B5E20",
+            AppbarText = "#FFFFFF",
+            DrawerBackground = "#212121",
+            DrawerText = "#E0E0E0",
+            Background = "#121212",
+            Surface = "#2D2D2D",
+            TextPrimary = "#FFFFFF",
+            TextSecondary = "#BDBDBD",
+            Success = "#4CAF50",
+            Warning = "#FFA726",
+            Error = "#EF5350",
+            Info = "#4FC3F7"
+        }
+    };
 
     void DrawerToggle()
     {

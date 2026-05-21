@@ -1,25 +1,21 @@
 @page "/"
 @using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Library Management System</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16 text-center">
-    <MudText Typo="Typo.h2" Color="Color.Primary" Class="mb-4">Welcome to our Library Management System</MudText>
-    <MudText Typo="Typo.h5" Class="mb-12">The easiest way to browse books, manage your loans, and more.</MudText>
-
-    <AuthorizeView>
-        <Authorized>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Href="/dashboard">Go to Dashboard</MudButton>
-        </Authorized>
-        <NotAuthorized>
-            <MudGrid Justify="Justify.Center">
-                <MudItem>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Href="/login">Login</MudButton>
-                </MudItem>
-                <MudItem>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large" Href="/register">Register Now</MudButton>
-                </MudItem>
-            </MudGrid>
-        </NotAuthorized>
-    </AuthorizeView>
-</MudContainer>
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (!authState.User.Identity?.IsAuthenticated ?? true)
+        {
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/dashboard", forceLoad: true);
+        }
+    }
+}
