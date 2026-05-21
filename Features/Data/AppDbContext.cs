@@ -11,10 +11,10 @@ namespace LibraryManagement.Features.Data
             {
             }
 
-            public DbSet<Book> Books { get; set; }
-            public DbSet<Author> Authors { get; set; }
-            public DbSet<Member> Members { get; set; }
-            public DbSet<Loan> Loans { get; set; }
+            public DbSet<Book> Books { get; set; } = null!;
+            public DbSet<Author> Authors { get; set; } = null!;
+            public DbSet<Member> Members { get; set; } = null!;
+            public DbSet<Loan> Loans { get; set; } = null!;
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
